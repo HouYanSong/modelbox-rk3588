@@ -1,0 +1,249 @@
+{
+    "flowunits": {
+        "read_frame": {
+            "config": {
+                "pull_video_url": {
+                    "type": "str",
+                    "required": true,
+                    "default": null,
+                    "desc": "pull video url",
+                    "source": "mp4|flv|rtmp|rtsp"
+                },
+                "height": {
+                    "type": "int",
+                    "required": true,
+                    "default": null,
+                    "max": 1440,
+                    "min": 720,
+                    "desc": "video height"
+                },
+                "width": {
+                    "type": "int",
+                    "required": true,
+                    "default": null,
+                    "max": 1920,
+                    "min": 960,
+                    "desc": "video width"
+                },
+                "fps": {
+                    "type": "int",
+                    "required": true,
+                    "default": null,
+                    "max": 15,
+                    "min": 5,
+                    "desc": "frame rate"
+                }
+            },
+            "multi_output": []
+        },
+        "model_infer": {
+            "config": {
+                "model_file": {
+                    "type": "str",
+                    "required": true,
+                    "default": null,
+                    "desc": "model file path, rk3588 mostly ends with .rknn"
+                },
+                "model_info": {
+                    "type": "str",
+                    "required": true,
+                    "default": null,
+                    "desc": "model info file path, mostly use json file"
+                },
+                "batch_size": {
+                    "type": "int",
+                    "required": true,
+                    "default": null,
+                    "max": 8,
+                    "min": 1,
+                    "desc": "batch size"
+                }
+            },
+            "single_input": null,
+            "multi_output": []
+        },
+        "kf_tracker": {
+            "config": {},
+            "single_input": null,
+            "multi_output": []
+        },
+        "draw_boxes": {
+            "single_input": null,
+            "config": {},
+            "multi_output": []
+        },
+        "push_frame": {
+            "config": {
+                "push_video_url": {
+                    "type": "str",
+                    "required": true,
+                    "default": null,
+                    "desc": "push video url",
+                    "source": "rtmp|flv|mp4"
+                },
+                "format": {
+                    "type": "str",
+                    "required": true,
+                    "default": null,
+                    "desc": "vodeo format",
+                    "source": "flv|mp4"
+                },
+                "height": {
+                    "type": "int",
+                    "required": true,
+                    "default": null,
+                    "max": 1920,
+                    "min": 720,
+                    "desc": "video height"
+                },
+                "width": {
+                    "type": "int",
+                    "required": true,
+                    "default": null,
+                    "max": 1920,
+                    "min": 960,
+                    "desc": "video width"
+                },
+                "fps": {
+                    "type": "int",
+                    "required": true,
+                    "default": null,
+                    "max": 15,
+                    "min": 5,
+                    "desc": "frame rate"
+                }
+            },
+            "single_input": null
+        },
+        "redis_push": {
+            "config": {
+                "task_id": {
+                    "type": "str",
+                    "required": true,
+                    "default": null,
+                    "desc": "task id"
+                },
+                "host": {
+                    "type": "str",
+                    "required": true,
+                    "default": null,
+                    "desc": "redis host"
+                },
+                "port": {
+                    "type": "int",
+                    "required": true,
+                    "default": null,
+                    "desc": "redis port"
+                },
+                "username": {
+                    "type": "str",
+                    "required": true,
+                    "default": null,
+                    "desc": "redis username"
+                },
+                "password": {
+                    "type": "str",
+                    "required": true,
+                    "default": null,
+                    "desc": "redis password"
+                },
+                "db": {
+                    "type": "int",
+                    "required": true,
+                    "default": null,
+                    "desc": "redis db"
+                }
+            },
+            "single_input": null
+        }
+    },
+    "queue_size": 16,
+    "queue_list": [
+        "frame_queue",
+        "infer_queue_1",
+        "infer_queue_2",
+        "track_queue",
+        "draw_queue_1",
+        "draw_queue_2"
+    ],
+    "graph_edge": {
+        "读流功能单元": {
+            "read_frame": {
+                "config": {
+                    "pull_video_url": "/home/orangepi/workspace/modelbox/data/car.mp4",
+                    "height": 720,
+                    "width": 1280,
+                    "fps": 20
+                },
+                "multi_output": [
+                    "frame_queue"
+                ]
+            }
+        },
+        "推理功能单元": {
+            "model_infer": {
+                "config": {
+                    "model_file": "/home/orangepi/workspace/modelbox/model/yolov8n_800x800_int8.rknn",
+                    "model_info": "/home/orangepi/workspace/modelbox/model/yolov8n_800x800_int8.json",
+                    "batch_size": 8
+                },
+                "single_input": "frame_queue",
+                "multi_output": [
+                    "infer_queue_1",
+                    "infer_queue_2"
+                ]
+            }
+        },
+        "跟踪功能单元_2": {
+            "kf_tracker": {
+                "config": {},
+                "single_input": "infer_queue_2",
+                "multi_output": [
+                    "track_queue"
+                ]
+            }
+        },
+        "绘图功能单元_1": {
+            "draw_boxes": {
+                "config": {},
+                "single_input": "infer_queue_1",
+                "multi_output": [
+                    "draw_queue_1"
+                ]
+            }
+        },
+        "绘图功能单元_2": {
+            "draw_boxes": {
+                "single_input": "track_queue",
+                "config": {},
+                "multi_output": [
+                    "draw_queue_2"
+                ]
+            }
+        },
+        "推流功能单元_1": {
+            "push_frame": {
+                "config": {
+                    "push_video_url": "/home/orangepi/workspace/modelbox/output/det_result.mp4",
+                    "format": "mp4",
+                    "height": 720,
+                    "width": 1280,
+                    "fps": 20
+                },
+                "single_input": "draw_queue_1"
+            }
+        },
+        "推流功能单元_2": {
+            "push_frame": {
+                "config": {
+                    "push_video_url": "/home/orangepi/workspace/modelbox/output/track_result.mp4",
+                    "format": "mp4",
+                    "height": 720,
+                    "width": 1280,
+                    "fps": 20
+                },
+                "single_input": "draw_queue_2"
+            }
+        }
+    }
+}
